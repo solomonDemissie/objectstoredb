@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c1ef2a9f-f0ee-4624-bf2f-4dce253cfd44" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="f9b067f1-265c-4fc8-8095-3751f11e17e8" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="mule1234" database="employeedb" />
+	</db:config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="679c5236-d881-4fe5-b2e4-d964a6f694ab" persistent="false"/>
+	<os:object-store name="Object_storeP" doc:name="Object store" doc:id="542abf9d-1cc4-456b-b079-1aefb545f5d8" />
+	<flow name="objectstoredbFlow" doc:id="a1bfdb30-3de2-4b0c-8fc3-e60b8ce7cb50" >
+		<http:listener doc:name="Listener" doc:id="77bbdb72-37ef-4dd6-aaad-a0a02e7236c2" config-ref="HTTP_Listener_config" path="/"/>
+		<set-variable value="#[now()]" doc:name="Set Variable" doc:id="fa0d3a34-d7e8-4cdc-9d4e-4027cd2e4c9a" variableName="start"/>
+		<logger level="INFO" doc:name="start" doc:id="96a80982-c99f-462d-bbc0-6f2262afa5a7" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;incomingPayload : payload,&#10;StartTime : vars.start&#10;}]"/>
+		<set-variable value="#[vars.start - now()]" doc:name="Set Variable" doc:id="ae93bf44-850f-4fe9-914c-848d10117531" variableName="end"/>
+		<os:retrieve doc:name="Retrieve" doc:id="0c42dc6e-377e-46d4-88f6-3415b7d87321" key="database" target="watermark" objectStore="Object_storeP">
+			<os:default-value><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<logger level="INFO" doc:name="Logger" doc:id="1eee612f-a86d-4e27-b58b-52f0e3ea114c" message="#[vars.watermark]" />
+		<db:select doc:name="Select" doc:id="9bb1e98e-2551-42d9-afa2-8faa6cb04d1c" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from employee  where employee_id > :EmpId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	EmpId : vars.watermark
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="end" doc:id="b0dda78b-044c-4e03-8f7d-5ecb3534ae0f" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;incomingPayload : payload,&#10;endtime : vars.end&#10;}]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f9e29652-8db6-450e-bc69-3c49f6eb7655" message="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]" />
+		<os:store doc:name="Store" doc:id="071a0904-c7f4-4228-8d13-9d56abf53f7b" key="database" failOnNullValue="false" objectStore="Object_storeP">
+			<os:value><![CDATA[#[max (payload map $.employee_id)]]]></os:value>
+		</os:store>
+		<ee:transform doc:name="Transform Message" doc:id="0a14c366-7c5d-4c50-9b3e-438e62dd48bd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
