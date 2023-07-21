@@ -24,12 +24,7 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
 			<os:default-value><![CDATA[0]]></os:default-value>
 		</os:retrieve>
 		<logger level="INFO" doc:name="Logger" doc:id="1eee612f-a86d-4e27-b58b-52f0e3ea114c" message="#[vars.watermark]" />
-		<db:select doc:name="Select" doc:id="9bb1e98e-2551-42d9-afa2-8faa6cb04d1c" config-ref="Database_Config">
-			<db:sql ><![CDATA[select * from employee  where employee_id > :EmpId]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
-	EmpId : vars.watermark
-}]]]></db:input-parameters>
-		</db:select>
+		<flow-ref doc:name="Flow Reference" doc:id="5927ba23-46e2-4af1-9f6d-74c4706bb2d6" name="objectstoredbSub_Flow"/>
 		<logger level="INFO" doc:name="end" doc:id="b0dda78b-044c-4e03-8f7d-5ecb3534ae0f" message="#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;incomingPayload : payload,&#10;endtime : vars.end&#10;}]"/>
 		<logger level="INFO" doc:name="Logger" doc:id="f9e29652-8db6-450e-bc69-3c49f6eb7655" message="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]" />
 		<os:store doc:name="Store" doc:id="071a0904-c7f4-4228-8d13-9d56abf53f7b" key="database" failOnNullValue="false" objectStore="Object_storeP">
@@ -44,4 +39,12 @@ payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
 	</flow>
+	<sub-flow name="objectstoredbSub_Flow" doc:id="42598e75-2dc8-437f-8948-713a4a20e82c" >
+		<db:select doc:name="Select" doc:id="9bb1e98e-2551-42d9-afa2-8faa6cb04d1c" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from employee  where employee_id > :EmpId]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	EmpId : vars.watermark
+}]]]></db:input-parameters>
+		</db:select>
+	</sub-flow>
 </mule>

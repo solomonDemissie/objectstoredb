@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_42598e75_2dc8_437f_8948_713a4a20e82c_Output_Payload = Array<{|  employee_id: String,   first_name?: String,   last_name?: String,   email?: String,   Phone_number?: String,   hire_date?: Date,   job_id?: String,   Salary?: Number,   commission?: Number,   manager_id?: String,   Department_id?: Number|}>
+

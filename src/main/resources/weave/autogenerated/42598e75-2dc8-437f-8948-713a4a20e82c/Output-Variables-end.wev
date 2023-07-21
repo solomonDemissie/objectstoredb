@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_42598e75_2dc8_437f_8948_713a4a20e82c_Output_Variables_end = Period
+
