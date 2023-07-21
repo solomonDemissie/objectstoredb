@@ -46,5 +46,6 @@ payload]]></ee:set-payload>
 	EmpId : vars.watermark
 }]]]></db:input-parameters>
 		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="4362a6f0-2316-4b40-807e-79039422e0ad" />
 	</sub-flow>
 </mule>
